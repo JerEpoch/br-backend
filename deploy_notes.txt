@@ -1,0 +1,5 @@
+gunicorn -b localhost:5000 -w 4 bracket:app
+
+
+
+nginx is under default

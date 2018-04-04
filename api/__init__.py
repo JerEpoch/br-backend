@@ -4,6 +4,7 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 app.config.from_object(Config)
-CORS(app)
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+#CORS(app)
 
 from api import routes
