@@ -7,10 +7,10 @@ def index():
     return 'Hello World'
 
 
-@app.route('/api')
+@app.route('/bracket-api/api')
 def api():
     return json.dumps({"msg": "hello from api"})
 
-@app.route('/api/two')
+@app.route('/bracket-api/api/two')
 def api_two():
     return json.dumps({"msg": "This is api two"})
