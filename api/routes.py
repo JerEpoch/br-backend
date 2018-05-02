@@ -14,3 +14,4 @@ def api():
 @app.route('/bracket-api/api/two')
 def api_two():
     return json.dumps({"msg": "This is api two"})
+
