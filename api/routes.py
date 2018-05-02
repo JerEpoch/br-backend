@@ -1,6 +1,7 @@
 from api import app
 from flask import json
 from flask_cors import cross_origin
+from functools import wraps  
 
 @app.route('/')
 def index():

@@ -1,9 +1,19 @@
+import base64
+import os
 from flask import jsonify, request, json, current_app
 from api import db, app
 from api.models import User
 from datetime import datetime, timedelta
 from flask_httpauth import HTTPBasicAuth
 import jwt
+
+def create_token(email):
+    token = jwt.encode({
+        'sub': email,
+        'iat':datetime.utcnow(),
+        'exp': datetime.utcnow() + timedelta(minutes=30)},
+        current_app.config['SECRET_KEY'])
+    return { 'token': token.decode('UTF-8') }
 
 @app.route('/bracket-api/users/create', methods=['POST'])
 def create_user():
@@ -18,7 +28,8 @@ def create_user():
     user.from_dict(data, new_user=True)
     db.session.add(user)
     db.session.commit()
-    response = jsonify({"successMsg": "User was created"})
+    token = create_token(data['email'])
+    response = jsonify({"successMsg": "User was created"}, token)
     response.status_code = 201
     return response
     
@@ -30,27 +41,6 @@ def login_user():
     if not user:
         return jsonify({'errorMsg': 'Invalid credentials', 'authenticated': False}), 401
 
-    token = jwt.encode({
-        'sub': user.email,
-        'iat':datetime.utcnow(),
-        'exp': datetime.utcnow() + timedelta(minutes=30)},
-        current_app.config['SECRET_KEY'])
-    return jsonify({ 'token': token.decode('UTF-8') })
+    token = jsonify(create_token(data['email']))
+    return token
 
-    # token = jwt.encode({
-    #     'user': user.username,
-    #     'token_issue_time':datetime.utcnow(),
-    #     'token_expire': datetime.utcnow() + timedelta(minutes=120)},
-    #     current_app.config['SECRET_KEY'])
-    # return jsonify({ 'token': token.decode('UTF-8') })
-    
-    
-def token_required(f):
-    @wraps(f)
-    def _verify(*args, **kwargs):
-        auth_headers = request.headers.get('Authorization', '').split()
-
-        invalid_cred_msg = {
-            'errorMsg': 'You must be logged in or registered.',
-            'authenticated': False
-        }
