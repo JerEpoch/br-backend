@@ -1,19 +1,32 @@
 import base64
 import os
-from flask import jsonify, request, json, current_app
+from flask import jsonify, request, json, current_app, g
 from api import db, app
 from api.models import User
 from datetime import datetime, timedelta
 from flask_httpauth import HTTPBasicAuth
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 import jwt
 
-def create_token(email):
-    token = jwt.encode({
-        'sub': email,
-        'iat':datetime.utcnow(),
-        'exp': datetime.utcnow() + timedelta(minutes=30)},
-        current_app.config['SECRET_KEY'])
-    return { 'token': token.decode('UTF-8') }
+# def create_token(username):
+#     token = jwt.encode({
+#         'sub': username,
+#         'iat':datetime.utcnow(),
+#         'exp': datetime.utcnow() + timedelta(minutes=30)},
+#         current_app.config['SECRET_KEY'])
+#     g.current_user.set_user_token(token)
+#     #db.session.add(token)
+#     db.session.commit()
+#     return { 'token': token.decode('UTF-8') }
+
+def create_user_token(username):
+    expires = timedelta(days=7)
+    user_tkn = {
+        'access_token': create_access_token(identity=username, expires_delta=expires),
+    }
+    g.current_user.set_user_token(user_tkn['access_token'])
+    db.session.commit()
+    return user_tkn
 
 @app.route('/bracket-api/users/create', methods=['POST'])
 def create_user():
@@ -25,11 +38,15 @@ def create_user():
     if User.query.filter_by(email=data['email']).first():
         return jsonify({"errorMsg": "That email is already taken."}), 400
     user = User()
+    g.current_user = user
     user.from_dict(data, new_user=True)
     db.session.add(user)
     db.session.commit()
-    token = create_token(data['email'])
-    response = jsonify({"successMsg": "User was created"}, token)
+    
+    #create_token(data['username'])
+    u_token = create_user_token(data['username'])
+    #response = jsonify({"successMsg": "User was created"}, token)
+    response = jsonify(user.to_dict(), u_token)
     response.status_code = 201
     return response
     
@@ -37,10 +54,55 @@ def create_user():
 def login_user():
     data = request.get_json() or {}
     user = User.authenticate(**data)
+    g.current_user = user
 
     if not user:
         return jsonify({'errorMsg': 'Invalid credentials', 'authenticated': False}), 401
 
-    token = jsonify(create_token(data['email']))
+    
+    token = jsonify(create_user_token(g.current_user.username))
     return token
+
+@app.route('/bracket-api/testjwt', methods=['POST', 'GET'])
+@jwt_required
+def test_jwt():
+    return jsonify({'msg': 'cool, jwt protected work!!'})
+
+# @app.route('/bracket-api/users/access', methods=['POST'])
+# @jwt_required
+# def get_userAccess():
+#     current_user = get_jwt_identity()
+
+@app.route('/bracket-api/users/user', methods=['POST', 'GET'])
+@jwt_required
+def get_user():
+    # auth_header = request.headers.get('Authorization', '').split()
+    # token = auth_header[0]
+    # data = jwt.decode(token, current_app.config['SECRET_KEY'])
+    # user = User.query.filter_by(username=data['sub']).first()
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(username=current_user).first()
+    user_access = user.userAccess
+    ret_data = {'logged_in_as':current_user, 'user_access': user_access}
+    return jsonify(ret_data), 200
+    #return jsonify({'stuff': 'this is a user'})
+
+    # invalid_msg = {'errorMsg': 'Please Login', 'authenticated': False}
+
+
+    # if len(auth_header) !=2:
+    #     return jsonify(invalid_msg), 401
+
+    # try:
+    #     token = auth_header[1]
+    #     data = jwt.decode(token, current_app.config['SECRET_KEY'])
+    #     user = User.query.filter_by(username=data['sub']).first()
+    #     if not user:
+    #         raise RuntimeError('User was not found')
+    #     return jsonify({'username': user.username})
+    # except jwt.ExpiredSignature:
+    #     # return jsonify(invalid_msg), 401
+    #     return jsonify({'msg': 'expired'})
+    # except(jwt.InvalidTokenError, Exception) as e:
+    #     return jsonify(invalid_msg), 401
 

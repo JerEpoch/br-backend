@@ -2,13 +2,18 @@ from api import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from flask_login import UserMixin
-# 1 = regular user, 2 = stream(elevated stuff), 3 = admin(full access)
+
+import jwt
+from flask import current_app
+# 1 = regular user, 2 = streamer(elevated stuff), 3 = admin(full access)
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password = db.Column(db.String(128))
-    userAccess = db.Column(db.String(64), index=True, default='user')
+    token = db.Column(db.String(32), index=True, unique=True)
+    userAccess = db.Column(db.String(32), index=True, default='user')
+    tournaments = db.relationship('Tournament', backref="tournaments", lazy=False)
 
     def __repr__(self):
         return '<User {}> <userAccess {}>'.format(self.username, self.userAccess)
@@ -22,6 +27,9 @@ class User(UserMixin, db.Model):
     def set_user_role(self, role):
         self.userAccess = role
 
+    def set_user_token(self, token):
+        self.token = token
+
     def from_dict(self, data, new_user=False):
         for field in ['username', 'email']:
             if field in data:
@@ -31,13 +39,13 @@ class User(UserMixin, db.Model):
 
     @classmethod
     def authenticate(cls, **kwargs):
-        username = kwargs.get('username')
+        email = kwargs.get('email')
         password = kwargs.get('password')
 
-        if not username or not password:
+        if not email or not password:
             return None
 
-        user = cls.query.filter_by(username=username).first()
+        user = cls.query.filter_by(email=email).first()
         if not user or not check_password_hash(user.password, password):
             return None
         
@@ -45,4 +53,29 @@ class User(UserMixin, db.Model):
 
     def to_dict(self):
         return dict(id=self.id, email=self.email, username=self.username, userAccess=self.userAccess)
-    
+
+
+class Tournament(db.Model):
+    __tablename__ == 'tournaments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_title = db.Column(db.String(300), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_completed = db.Column(db.Boolean, default=False)
+    tournament_players = db.relationship('TournamentPlayers', backref='players', lazy=False)
+
+
+class TournamentPlayers(db.Model):
+    __tablename__ = 'players'
+
+    id = db.Column(db.Integer, primary_key=True)
+    player_name = db.Column(db.String(100), nullable=False)
+    is_elimanated = db.Column(db.Boolean, default=False)
+    is_winner = db.Column(db.Boolean, default=False)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
+
+
+class Matches(db.Model):
+    __tablename__ = 'matches'
+
+    id = db.Column(db.Integer, primary_key=True)

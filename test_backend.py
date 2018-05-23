@@ -25,7 +25,19 @@ class TestBackendApi(unittest.TestCase):
       }
     resp = self.client().post('/bracket-api/users/create', data=json.dumps(data), headers=headers)
     print(resp.data)
+    with self.app.app_context():
+      user = User.query.filter_by(username='testUserOne').first()
+      print(user.token)
     self.assertEqual(resp.status_code, 201)
+
+  def listUser(self):
+    with self.app.app_context():
+      print("listing user")
+      user = User.query.filter_by(username='testUserOne').first()
+      if(user):
+        print("user token is")
+        print(user.token)
+      
 
   def tearDown(self):
     with self.app.app_context():
