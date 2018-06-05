@@ -15,4 +15,4 @@ login = LoginManager(app)
 jwt = JWTManager(app)
 #CORS(app)
 
-from api import routes, users, models
+from api import routes, users, models, tournament

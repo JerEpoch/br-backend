@@ -13,7 +13,7 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(128))
     token = db.Column(db.String(32), index=True, unique=True)
     userAccess = db.Column(db.String(32), index=True, default='user')
-    tournaments = db.relationship('Tournament', backref="tournaments", lazy=False)
+    tournaments = db.relationship('Tournament', backref="tournaments", lazy='dynamic')
 
     def __repr__(self):
         return '<User {}> <userAccess {}>'.format(self.username, self.userAccess)
@@ -56,13 +56,20 @@ class User(UserMixin, db.Model):
 
 
 class Tournament(db.Model):
-    __tablename__ == 'tournaments'
+    __tablename__ = 'tournaments'
 
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     tournament_title = db.Column(db.String(300), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_completed = db.Column(db.Boolean, default=False)
-    tournament_players = db.relationship('TournamentPlayers', backref='players', lazy=False)
+    players = db.relationship('TournamentPlayers', backref='players', lazy='dynamic')
+
+    def __repr__(self):
+        return '<Tournament {}>'.format(self.tournament_title)
+
+    def to_dict(self):
+        return dict(id=self.id, tournament_title=self.tournament_title,players=[player.to_dict() for player in self.players])
 
 
 class TournamentPlayers(db.Model):
@@ -72,10 +79,19 @@ class TournamentPlayers(db.Model):
     player_name = db.Column(db.String(100), nullable=False)
     is_elimanated = db.Column(db.Boolean, default=False)
     is_winner = db.Column(db.Boolean, default=False)
-    tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id'))
+    matches = db.relationship('Matches', backref='matches', lazy='dynamic')
+
+    def to_dict(self):
+        return dict(id=self.id, playerName= self.player_name, eliminated=self.is_elimanated)
 
 
 class Matches(db.Model):
     __tablename__ = 'matches'
 
     id = db.Column(db.Integer, primary_key=True)
+    round = db.Column(db.Integer, nullable=False)
+    player_one = db.Column(db.String(100), nullable=False)
+    player_two = db.Column(db.String(100), nullable=False)
+    tournamentplayers_id  = db.Column(db.Integer, db.ForeignKey('players.id'))
+    bracket_position = db.Column(db.Integer, nullable=False) 

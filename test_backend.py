@@ -38,6 +38,8 @@ class TestBackendApi(unittest.TestCase):
         print("user token is")
         print(user.token)
       
+  def create_tourn(self):
+    pass
 
   def tearDown(self):
     with self.app.app_context():
