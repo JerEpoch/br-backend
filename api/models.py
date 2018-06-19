@@ -64,12 +64,17 @@ class Tournament(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_completed = db.Column(db.Boolean, default=False)
     players = db.relationship('TournamentPlayers', backref='players', lazy='dynamic')
+    matches = db.relationship('Matches', backref='matches', lazy='dynamic')
 
     def __repr__(self):
         return '<Tournament {}>'.format(self.tournament_title)
 
+    # sets the tournament completation status. Should pretty much be true as false is default
+    def set_isCompleted(self, isCompleted):
+        self.is_completed = isCompleted
+
     def to_dict(self):
-        return dict(id=self.id, tournament_title=self.tournament_title,players=[player.to_dict() for player in self.players])
+        return dict(id=self.id, tournament_title=self.tournament_title, players=[player.to_dict() for player in self.players], match=[match.to_dict() for match in self.matches])
 
 
 class TournamentPlayers(db.Model):
@@ -80,10 +85,9 @@ class TournamentPlayers(db.Model):
     is_elimanated = db.Column(db.Boolean, default=False)
     is_winner = db.Column(db.Boolean, default=False)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id'))
-    matches = db.relationship('Matches', backref='matches', lazy='dynamic')
 
     def to_dict(self):
-        return dict(id=self.id, playerName= self.player_name, eliminated=self.is_elimanated)
+        return dict(id=self.id, playerName= self.player_name, eliminated=self.is_elimanated, isWinner=self.is_winner)
 
 
 class Matches(db.Model):
@@ -93,5 +97,18 @@ class Matches(db.Model):
     round = db.Column(db.Integer, nullable=False)
     player_one = db.Column(db.String(100), nullable=False)
     player_two = db.Column(db.String(100), nullable=False)
-    tournamentplayers_id  = db.Column(db.Integer, db.ForeignKey('players.id'))
-    bracket_position = db.Column(db.Integer, nullable=False) 
+    tournament_id  = db.Column(db.Integer, db.ForeignKey('tournaments.id'))
+    #bracket_position = db.Column(db.Integer)
+
+    # sets the match up for next round
+    def set_nextMatch(self, playerOne, playerTwo, round):
+        self.round = round
+        self.player_one = playerOne
+        self.player_two = playerTwo
+
+    
+
+
+    def to_dict(self):
+        return dict(id=self.id, tournamentId=self.tournament_id, playerOne=self.player_one, playerTwo=self.player_two, round=self.round)
+     
