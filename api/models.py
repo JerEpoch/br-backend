@@ -59,12 +59,12 @@ class Tournament(db.Model):
     __tablename__ = 'tournaments'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     tournament_title = db.Column(db.String(300), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_completed = db.Column(db.Boolean, default=False)
     players = db.relationship('TournamentPlayers', backref='players', lazy='dynamic')
-    matches = db.relationship('Matches', backref='matches', lazy='dynamic')
+    matches = db.relationship('Matches', backref='match_round', lazy='dynamic')
 
     def __repr__(self):
         return '<Tournament {}>'.format(self.tournament_title)
@@ -74,7 +74,7 @@ class Tournament(db.Model):
         self.is_completed = isCompleted
 
     def to_dict(self):
-        return dict(id=self.id, tournament_title=self.tournament_title, players=[player.to_dict() for player in self.players], match=[match.to_dict() for match in self.matches])
+        return dict(id=self.id, tournament_title=self.tournament_title, players=[player.to_dict() for player in self.players], match=[match.to_dict() for match in self.matches],tournamentCompleted=self.is_completed)
 
 
 class TournamentPlayers(db.Model):
@@ -95,8 +95,10 @@ class Matches(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     round = db.Column(db.Integer, nullable=False)
+    title = db.Column(db.String(100), nullable=False)
     player_one = db.Column(db.String(100), nullable=False)
-    player_two = db.Column(db.String(100), nullable=False)
+    player_two = db.Column(db.String(100), nullable=True)
+    round_completed = db.Column(db.Boolean, default=False)
     tournament_id  = db.Column(db.Integer, db.ForeignKey('tournaments.id'))
     #bracket_position = db.Column(db.Integer)
 
@@ -110,5 +112,5 @@ class Matches(db.Model):
 
 
     def to_dict(self):
-        return dict(id=self.id, tournamentId=self.tournament_id, playerOne=self.player_one, playerTwo=self.player_two, round=self.round)
+        return dict(id=self.id, tournamentId=self.tournament_id, playerOne=self.player_one, playerTwo=self.player_two, round=self.round, isCompleted=self.round_completed, roundTitle=self.title)
      
