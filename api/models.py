@@ -74,7 +74,8 @@ class Tournament(db.Model):
         self.is_completed = isCompleted
 
     def to_dict(self):
-        return dict(id=self.id, tournament_title=self.tournament_title, players=[player.to_dict() for player in self.players], match=[match.to_dict() for match in self.matches],tournamentCompleted=self.is_completed)
+        return dict(id=self.id, userID=self.user_id, tournament_title=self.tournament_title, players=[player.to_dict() for player in self.players], 
+        match=[match.to_dict() for match in self.matches],tournamentCompleted=self.is_completed)
 
 
 class TournamentPlayers(db.Model):

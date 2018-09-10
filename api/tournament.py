@@ -1,10 +1,20 @@
 from api import db, app
 from api.models import User, Tournament, TournamentPlayers, Matches
 from flask import jsonify, request, json, current_app, g
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 @app.route('/bracket-api/tournament/create', methods=['POST'])
+@jwt_required
 def create_tournament():
   data = request.get_json() or {}
+
+  current_user = get_jwt_identity()
+  user = User.query.filter_by(username=current_user).first()
+  #print(user.id)
+  #return jsonify({'data': user})
+  if not user:
+    return jsonify({'error': 'Invalid creditentials'}), 401
+
   if 'bracket' not in data:
     return jsonify({'error': 'Something went wrong.'}), 400
   if 'tournamentName' not in data:
@@ -14,9 +24,9 @@ def create_tournament():
 
   tournament = Tournament(tournament_title=data['tournamentName'])
   title = 'Round ' + str(data['round'])
-
+  tournament.user_id = user.id
   # #add players
-  players, matches = [], []
+  players = []
   for p in data['bracket']:
     players.append(p['playerOne'])
     players.append(p['playerTwo'])
@@ -51,9 +61,9 @@ def get_tourns():
   #return jsonify({'tourns': tournaments.to_dict()})
   return jsonify({'tourns': [t.to_dict() for t in tournaments], 'completedTourns': [t.to_dict() for t in completedTournaments]})
 
-@app.route('/bracket-api/tournament/<int:id>/<int:round>', methods=['GET'])
-def get_match_round(id, round):
-  pass
+# @app.route('/bracket-api/tournament/<int:id>/<int:round>', methods=['GET'])
+# def get_match_round(id, round):
+#   pass
 
 @app.route('/bracket-api/tournament/<int:id>/', methods=['GET'])
 def get_tournament(id):
@@ -63,7 +73,25 @@ def get_tournament(id):
 
   return jsonify({'tournament': tournament.to_dict()})
 
+@app.route('/bracket-api/tournament/tournadmin/<int:id>/', methods=['GET'])
+@jwt_required
+def check_tourn_admin(id):
+  current_user = get_jwt_identity()
+  user = User.query.filter_by(username=current_user).first()
+
+  if not user:
+    return jsonify({'error': 'User not found. Please login or signup.'})
+  
+  tournament = Tournament.query.get(id)
+  if tournament.user_id != user.id:
+    return jsonify({'data': False})
+  else:
+    return jsonify({'data': True})
+  
+  return jsonify({'error': 'There was a problem getting information.'})
+
 @app.route('/bracket-api/tournament', methods=["POST"])
+@jwt_required
 def set_match_winner():
   data = request.get_json() or {}
   # check for errors in info

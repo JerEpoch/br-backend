@@ -42,7 +42,7 @@ def create_user():
     user.from_dict(data, new_user=True)
     db.session.add(user)
     db.session.commit()
-    
+    # print(user.id)
     #create_token(data['username'])
     u_token = create_user_token(data['username'])
     #response = jsonify({"successMsg": "User was created"}, token)
