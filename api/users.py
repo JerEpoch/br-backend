@@ -73,6 +73,29 @@ def test_jwt():
 # def get_userAccess():
 #     current_user = get_jwt_identity()
 
+@app.route('/bracket-api/users/edit/user', methods=['POST', 'GET'])
+@jwt_required
+def edit_user():
+    current_user = get_jwt_identity()
+    data = request.get_json() or {}
+    user = User.query.filter_by(username=current_user).first()
+    if request.method == 'GET':
+        return jsonify(user.to_dict()), 200
+    
+    if request.method == 'POST':
+        
+        if user.check_password(data['password']):
+            user.edit_user_profile(data)
+            db.session.add(user)
+            db.session.commit()
+            return jsonify({'data': user.to_dict()})
+        else:
+            return jsonify({'data': False})
+        #return jsonify({'data': isUser})
+        #return jsonify({'data': data['password']})
+
+
+
 @app.route('/bracket-api/users/user', methods=['POST', 'GET'])
 @jwt_required
 def get_user():
@@ -83,7 +106,8 @@ def get_user():
     current_user = get_jwt_identity()
     user = User.query.filter_by(username=current_user).first()
     user_access = user.userAccess
-    ret_data = {'logged_in_as':current_user, 'user_access': user_access}
+    userId = user.id
+    ret_data = {'logged_in_as':current_user, 'userId': userId, 'user_access': user_access}
     return jsonify(ret_data), 200
     #return jsonify({'stuff': 'this is a user'})
 

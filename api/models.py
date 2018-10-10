@@ -11,6 +11,9 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password = db.Column(db.String(128))
+    elPage = db.Column(db.String(256))
+    twitch = db.Column(db.String(128))
+    twitter = db.Column(db.String(256))
     token = db.Column(db.String(32), index=True, unique=True)
     userAccess = db.Column(db.String(32), index=True, default='user')
     tournaments = db.relationship('Tournament', backref="tournaments", lazy='dynamic')
@@ -20,7 +23,7 @@ class User(UserMixin, db.Model):
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
-
+ 
     def check_password(self, password):
         return check_password_hash(self.password, password)
     
@@ -36,6 +39,11 @@ class User(UserMixin, db.Model):
                 setattr(self, field, data[field])
             if new_user and 'password' in data:
                 self.set_password(data['password'])
+    
+    def edit_user_profile(self, data):
+        for field in ['email', 'password', 'elPage', 'twitch', 'twitter']:
+            if field in data:
+                setattr(self, field, data[field])
 
     @classmethod
     def authenticate(cls, **kwargs):
@@ -52,7 +60,7 @@ class User(UserMixin, db.Model):
         return user
 
     def to_dict(self):
-        return dict(id=self.id, email=self.email, username=self.username, userAccess=self.userAccess)
+        return dict(id=self.id, email=self.email, username=self.username, userAccess=self.userAccess, elPage=self.elPage, twitter=self.twitter, twitch=self.twitch)
 
 
 class Tournament(db.Model):
