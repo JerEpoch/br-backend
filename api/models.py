@@ -23,6 +23,7 @@ class User(UserMixin, db.Model):
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
+        
  
     def check_password(self, password):
         return check_password_hash(self.password, password)
@@ -41,9 +42,19 @@ class User(UserMixin, db.Model):
                 self.set_password(data['password'])
     
     def edit_user_profile(self, data):
-        for field in ['email', 'password', 'elPage', 'twitch', 'twitter']:
+        for field in ['email', 'elPage', 'twitch', 'twitter']:
             if field in data:
                 setattr(self, field, data[field])
+            if 'newPassword' in data:
+                self.set_password(data['newPassword'])
+
+    @staticmethod
+    def check_user_token(token):
+        user = User.query.filter_by(token=token).first
+        if user is None:
+            return None
+        
+        return user
 
     @classmethod
     def authenticate(cls, **kwargs):

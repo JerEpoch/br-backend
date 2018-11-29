@@ -24,9 +24,16 @@ def create_user_token(username):
     user_tkn = {
         'access_token': create_access_token(identity=username, expires_delta=expires),
     }
-    g.current_user.set_user_token(user_tkn['access_token'])
-    db.session.commit()
+    # g.current_user.set_user_token(user_tkn['access_token'])
+    # db.session.commit()
     return user_tkn
+
+def check_user_email(data):
+    if 'email' not in data:
+        return True
+    else:
+        if User.query.filter_by(email=data['email']).first():
+            return False
 
 @app.route('/bracket-api/users/create', methods=['POST'])
 def create_user():
@@ -39,17 +46,20 @@ def create_user():
         return jsonify({"errorMsg": "That email is already taken."}), 400
     user = User()
     g.current_user = user
-    user.from_dict(data, new_user=True)
-    db.session.add(user)
-    db.session.commit()
-    # print(user.id)
-    #create_token(data['username'])
-    u_token = create_user_token(data['username'])
-    #response = jsonify({"successMsg": "User was created"}, token)
-    response = jsonify(user.to_dict(), u_token)
-    response.status_code = 201
-    return response
-    
+    try:
+        user.from_dict(data, new_user=True)
+        db.session.add(user)
+        db.session.commit()
+        # print(user.id)
+        #create_token(data['username'])
+        u_token = create_user_token(data['username'])
+        #response = jsonify({"successMsg": "User was created"}, token)
+        response = jsonify(user.to_dict(), u_token)
+        response.status_code = 201
+        return response
+    except:
+        return jsonify({'errorMsg': 'Something went wrong.'}), 500
+
 @app.route('/bracket-api/users/login', methods=['POST'])
 def login_user():
     data = request.get_json() or {}
@@ -77,23 +87,28 @@ def test_jwt():
 @jwt_required
 def edit_user():
     current_user = get_jwt_identity()
-    data = request.get_json() or {}
-    user = User.query.filter_by(username=current_user).first()
-    if request.method == 'GET':
-        return jsonify(user.to_dict()), 200
-    
-    if request.method == 'POST':
-        
-        if user.check_password(data['password']):
-            user.edit_user_profile(data)
-            db.session.add(user)
-            db.session.commit()
-            return jsonify({'data': user.to_dict()})
-        else:
-            return jsonify({'data': False})
-        #return jsonify({'data': isUser})
-        #return jsonify({'data': data['password']})
+    if current_user:
 
+        data = request.get_json() or {}
+        user = User.query.filter_by(username=current_user).first()
+        if request.method == 'GET':
+            return jsonify(user.to_dict()), 200
+        
+        if request.method == 'POST':
+            if user.check_password(data['password']):
+                if not check_user_email(data):
+                    return jsonify({"errorMsg": "Please use a different email address."}), 400 
+                try:
+                    user.edit_user_profile(data)
+                    db.session.add(user)
+                    db.session.commit()
+                    return jsonify({'data': user.to_dict()})
+                except:
+                    return jsonify({'errorMsg': 'Something went wrong.'}), 500
+            else:
+                return jsonify({'errorMsg': 'Email and password do not match.'})
+    else:
+        return jsonify({'errorMsg': 'Unauthorized user.'})
 
 
 @app.route('/bracket-api/users/user', methods=['POST', 'GET'])
