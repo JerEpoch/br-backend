@@ -29,7 +29,9 @@ def create_user_token(username):
     return user_tkn
 
 def check_user_email(data):
-    if 'email' not in data:
+    # if 'email' not in data:
+    #     return True
+    if data['newEmail']:
         return True
     else:
         if User.query.filter_by(email=data['email']).first():
@@ -67,7 +69,7 @@ def login_user():
     g.current_user = user
 
     if not user:
-        return jsonify({'errorMsg': 'Invalid credentials', 'authenticated': False}), 401
+        return jsonify({'errorMsg': 'Email or password do not match.', 'authenticated': False}), 401
 
     
     token = jsonify(create_user_token(g.current_user.username))
