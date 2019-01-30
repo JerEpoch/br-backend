@@ -14,6 +14,7 @@ class User(UserMixin, db.Model):
     elPage = db.Column(db.String(256))
     twitch = db.Column(db.String(128))
     twitter = db.Column(db.String(256))
+    about = db.Column(db.String)
     token = db.Column(db.String(32), index=True, unique=True)
     userAccess = db.Column(db.String(32), index=True, default='user')
     tournaments = db.relationship('Tournament', backref="tournaments", lazy='dynamic')
@@ -42,7 +43,7 @@ class User(UserMixin, db.Model):
                 self.set_password(data['password'])
     
     def edit_user_profile(self, data):
-        for field in ['email', 'elPage', 'twitch', 'twitter']:
+        for field in ['email', 'elPage', 'twitch', 'twitter', 'about']:
             if field in data:
                 setattr(self, field, data[field])
             if 'newPassword' in data:
@@ -71,7 +72,7 @@ class User(UserMixin, db.Model):
         return user
 
     def to_dict(self):
-        return dict(id=self.id, email=self.email, username=self.username, userAccess=self.userAccess, elPage=self.elPage, twitter=self.twitter, twitch=self.twitch)
+        return dict(id=self.id, email=self.email, username=self.username, userAccess=self.userAccess, elPage=self.elPage, twitter=self.twitter, twitch=self.twitch, aboutMe=self.about)
 
 
 class Tournament(db.Model):

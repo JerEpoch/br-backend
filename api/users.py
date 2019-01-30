@@ -31,11 +31,13 @@ def create_user_token(username):
 def check_user_email(data):
     # if 'email' not in data:
     #     return True
-    if data['newEmail']:
+    if 'newEmail' not in data:
         return True
     else:
         if User.query.filter_by(email=data['email']).first():
             return False
+        else:
+            return True
 
 @app.route('/bracket-api/users/create', methods=['POST'])
 def create_user():
@@ -111,6 +113,18 @@ def edit_user():
                 return jsonify({'errorMsg': 'Email and password do not match.'})
     else:
         return jsonify({'errorMsg': 'Unauthorized user.'})
+
+
+@app.route('/bracket-api/users/community', methods=['GET'])
+def get_all_users():
+    community = User.query.all()
+    return jsonify({'members': [u.to_dict() for u in community]})
+    #return jsonify({'msg': 'Community Uers a-ok.'})
+
+@app.route('/bracket-api/users/community/user/<int:id>', methods=['POST', 'GET'])
+def get_user_profile(id):
+    user = User.query.get(id)
+    return jsonify({'msg': user.to_dict()})
 
 
 @app.route('/bracket-api/users/user', methods=['POST', 'GET'])
