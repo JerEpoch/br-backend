@@ -1,7 +1,8 @@
 import base64
 import os
 from flask import jsonify, request, json, current_app, g
-from api import db, app
+from api import db
+from api.auth import bp
 from api.models import User
 from datetime import datetime, timedelta
 from flask_httpauth import HTTPBasicAuth
@@ -39,7 +40,7 @@ def check_user_email(data):
         else:
             return True
 
-@app.route('/bracket-api/users/create', methods=['POST'])
+@bp.route('/bracket-api/users/create', methods=['POST'])
 def create_user():
     data = request.get_json() or {}
     if 'username' not in data or 'email' not in data or 'password' not in data:
@@ -64,7 +65,7 @@ def create_user():
     except:
         return jsonify({'errorMsg': 'Something went wrong.'}), 500
 
-@app.route('/bracket-api/users/login', methods=['POST'])
+@bp.route('/bracket-api/users/login', methods=['POST'])
 def login_user():
     data = request.get_json() or {}
     user = User.authenticate(**data)
@@ -77,7 +78,7 @@ def login_user():
     token = jsonify(create_user_token(g.current_user.username))
     return token
 
-@app.route('/bracket-api/testjwt', methods=['POST', 'GET'])
+@bp.route('/bracket-api/testjwt', methods=['POST', 'GET'])
 @jwt_required
 def test_jwt():
     return jsonify({'msg': 'cool, jwt protected work!!'})
@@ -87,7 +88,7 @@ def test_jwt():
 # def get_userAccess():
 #     current_user = get_jwt_identity()
 
-@app.route('/bracket-api/users/edit/user', methods=['POST', 'GET'])
+@bp.route('/bracket-api/users/edit/user', methods=['POST', 'GET'])
 @jwt_required
 def edit_user():
     current_user = get_jwt_identity()
@@ -115,19 +116,19 @@ def edit_user():
         return jsonify({'errorMsg': 'Unauthorized user.'})
 
 
-@app.route('/bracket-api/users/community', methods=['GET'])
+@bp.route('/bracket-api/users/community', methods=['GET'])
 def get_all_users():
     community = User.query.all()
     return jsonify({'members': [u.to_dict() for u in community]})
     #return jsonify({'msg': 'Community Uers a-ok.'})
 
-@app.route('/bracket-api/users/community/user/<int:id>', methods=['POST', 'GET'])
+@bp.route('/bracket-api/users/community/user/<int:id>', methods=['POST', 'GET'])
 def get_user_profile(id):
     user = User.query.get(id)
     return jsonify({'msg': user.to_dict()})
 
 
-@app.route('/bracket-api/users/user', methods=['POST', 'GET'])
+@bp.route('/bracket-api/users/user', methods=['POST', 'GET'])
 @jwt_required
 def get_user():
     # auth_header = request.headers.get('Authorization', '').split()

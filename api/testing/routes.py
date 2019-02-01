@@ -1,25 +1,28 @@
-from api import app
+#from api import app
 from flask import json, jsonify
 from flask_cors import cross_origin
 from api.models import User
+from api.testing import bp
   
 
-@app.route('/')
+@bp.route('/')
 def index():
     return 'Hello World'
 
 
-@app.route('/bracket-api/api')
+@bp.route('/bracket-api/api')
 def api():
     return json.dumps({"msg": "hello from api"})
 
-@app.route('/bracket-api/api/two')
+@bp.route('/bracket-api/api/two')
 def api_two():
     user = User.query.filter_by(username='blah01').first()
     token = user.token
     if(token):
         return jsonify({'msg': token.decode('UTF-8')})
     return jsonify({'user': user.email})
+    
+    
     # users = User.query.all()
 
     # user_list = []

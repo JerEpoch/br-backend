@@ -1,9 +1,10 @@
-from api import db, app
+#from api import db, app
+from api.main import bp
 from api.models import User, Tournament, TournamentPlayers, Matches
 from flask import jsonify, request, json, current_app, g
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
-@app.route('/bracket-api/tournament/create', methods=['POST'])
+@bp.route('/bracket-api/tournament/create', methods=['POST'])
 @jwt_required
 def create_tournament():
   data = request.get_json() or {}
@@ -52,7 +53,7 @@ def create_tournament():
   #return jsonify({'test': data['bracket']})
   #return jsonify({'test': data['round']})
 
-@app.route('/bracket-api/tournament/getAllTournaments', methods=['GET'])
+@bp.route('/bracket-api/tournament/getAllTournaments', methods=['GET'])
 def get_tourns():
   #tournaments = Tournament.query.all()
   #tournaments = Tournament.query.get(10)
@@ -65,7 +66,7 @@ def get_tourns():
 # def get_match_round(id, round):
 #   pass
 
-@app.route('/bracket-api/tournament/<int:id>/', methods=['GET'])
+@bp.route('/bracket-api/tournament/<int:id>/', methods=['GET'])
 def get_tournament(id):
   tournament = Tournament.query.get(id)
   # for match in tournament.matches:
@@ -73,7 +74,7 @@ def get_tournament(id):
 
   return jsonify({'tournament': tournament.to_dict()})
 
-@app.route('/bracket-api/tournament/tournadmin/<int:id>/', methods=['GET'])
+@bp.route('/bracket-api/tournament/tournadmin/<int:id>/', methods=['GET'])
 @jwt_required
 def check_tourn_admin(id):
   current_user = get_jwt_identity()
@@ -90,7 +91,7 @@ def check_tourn_admin(id):
   
   return jsonify({'error': 'There was a problem getting information.'})
 
-@app.route('/bracket-api/tournament', methods=["POST"])
+@bp.route('/bracket-api/tournament', methods=["POST"])
 @jwt_required
 def set_match_winner():
   data = request.get_json() or {}
@@ -135,3 +136,8 @@ def set_match_winner():
   #print(match)
   #return jsonify({'data': data['players'][0]['playerOne']})
   return jsonify({'data': tournament.to_dict()})
+
+
+# @bp.route('/bracket-api/api')
+# def api():
+#     return json.dumps({"msg": "hello from api"})
