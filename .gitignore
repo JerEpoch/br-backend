@@ -1,3 +1,4 @@
 *.pyc
 #config.py
 seed_db.py
+app.db

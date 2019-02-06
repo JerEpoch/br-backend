@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from flask_login import UserMixin
 
-import jwt
+#import jwt
 from flask import current_app
 # 1 = regular user, 2 = streamer(elevated stuff), 3 = admin(full access)
 class User(UserMixin, db.Model):
