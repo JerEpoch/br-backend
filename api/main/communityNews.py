@@ -31,3 +31,4 @@ def create_newsPost():
 
   #return jsonify({'data': data})
 
+
