@@ -18,6 +18,7 @@ class User(UserMixin, db.Model):
     token = db.Column(db.String(32), index=True, unique=True)
     userAccess = db.Column(db.String(32), index=True, default='user')
     tournaments = db.relationship('Tournament', backref="tournaments", lazy='dynamic')
+    news_posts = db.relationship('MemberNewsPost', backref="author", lazy='dynamic')
 
     def __repr__(self):
         return '<User {}> <userAccess {}>'.format(self.username, self.userAccess)
@@ -134,4 +135,21 @@ class Matches(db.Model):
 
     def to_dict(self):
         return dict(id=self.id, tournamentId=self.tournament_id, playerOne=self.player_one, playerTwo=self.player_two, round=self.round, isCompleted=self.round_completed, roundTitle=self.title)
-     
+
+
+class MemberNewsPost(db.Model):
+    __tablename__ = 'membernewspost'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    news_title = db.Column(db.String, nullable=False)
+    news_post = db.Column(db.String, nullable=False)
+    publish_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return '<Post {}>'.format(self.news_post)
+
+    def from_dict(self, data):
+        for field in ['news_title', 'news_post']:
+            if field in data:
+                setattr(self, field, data[field])

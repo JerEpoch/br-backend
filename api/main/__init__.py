@@ -2,4 +2,4 @@ from flask import Blueprint
 
 bp = Blueprint('main', __name__)
 
-from api.main import tournament
+from api.main import tournament, communityNews
