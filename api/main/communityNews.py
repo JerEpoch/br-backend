@@ -30,3 +30,4 @@ def create_newsPost():
     return jsonify({'error': 'No current user.'})
 
   #return jsonify({'data': data})
+
