@@ -142,6 +142,7 @@ class MemberNewsPost(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = db.Column(db.String, nullable=False)
     news_title = db.Column(db.String, nullable=False)
     news_post = db.Column(db.String, nullable=False)
     publish_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -153,3 +154,6 @@ class MemberNewsPost(db.Model):
         for field in ['news_title', 'news_post']:
             if field in data:
                 setattr(self, field, data[field])
+
+    def to_dict(self):
+        return dict(id=self.id, user=self.user, newsTitle=self.news_title, newsPost=self.news_post, publishDate=self.publish_date)

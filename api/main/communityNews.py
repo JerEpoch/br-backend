@@ -16,9 +16,11 @@ def create_newsPost():
 
   newsPost = MemberNewsPost()
   current_user = get_jwt_identity()
+
   if current_user:
     try:
       user = User.query.filter_by(username=current_user).first()
+      newsPost.user = user.username
       newsPost.user_id = user.id
       newsPost.from_dict(data)
       db.session.add(newsPost)
@@ -32,3 +34,25 @@ def create_newsPost():
   #return jsonify({'data': data})
 
 
+@bp.route('/bracket-api/communitynews/getnewsposts', methods=['GET'])
+def get_allNewsPosts():
+  allNewsPosts = MemberNewsPost.query.all()
+  return jsonify({'data': [n.to_dict() for n in allNewsPosts] })
+  #return jsonify({'data': 'get news'})
+
+@bp.route('/bracket-api/communitynews/getnewspost/<int:id>', methods=['GET'])
+def get_newspost(id):
+  news_post = MemberNewsPost.query.get(id)
+  return jsonify({'data': news_post.to_dict()})
+
+@bp.route('/bracket-api/communitynews/deletepost')
+def delete_posts():
+  posts = MemberNewsPost.query.all()
+  for p in posts:
+    db.session.delete(p)
+    db.session.commit()
+
+  posts = MemberNewsPost.query.all()
+  return jsonify({'data': posts})
+
+#https://stackoverflow.com/questions/33705697/alembic-integrityerror-column-contains-null-values-when-adding-non-nullable
