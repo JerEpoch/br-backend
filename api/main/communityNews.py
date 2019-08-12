@@ -45,6 +45,11 @@ def get_newspost(id):
   news_post = MemberNewsPost.query.get(id)
   return jsonify({'data': news_post.to_dict()})
 
+@bp.route('/bracket-api/communitynews/getannouncements', methods=['GET'])
+def get_announcements():
+  announcements = MemberNewsPost.query.order_by(MemberNewsPost.publish_date.desc()).filter_by(is_announcement = True).limit(5)
+  return jsonify({'data': [a.to_dict() for a in announcements]})
+
 @bp.route('/bracket-api/communitynews/deletepost')
 def delete_posts():
   posts = MemberNewsPost.query.all()

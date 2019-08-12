@@ -145,15 +145,16 @@ class MemberNewsPost(db.Model):
     user = db.Column(db.String, nullable=False)
     news_title = db.Column(db.String, nullable=False)
     news_post = db.Column(db.String, nullable=False)
+    is_announcement = db.Column(db.Boolean, nullable=False, default=False)
     publish_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
         return '<Post {}>'.format(self.news_post)
 
     def from_dict(self, data):
-        for field in ['news_title', 'news_post']:
+        for field in ['news_title', 'news_post', 'is_announcement']:
             if field in data:
                 setattr(self, field, data[field])
 
     def to_dict(self):
-        return dict(id=self.id, user=self.user, newsTitle=self.news_title, newsPost=self.news_post, publishDate=self.publish_date)
+        return dict(id=self.id, user=self.user, newsTitle=self.news_title, newsPost=self.news_post, publishDate=self.publish_date, isAnnouncement=self.is_announcement)
