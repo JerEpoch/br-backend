@@ -36,9 +36,25 @@ def create_newsPost():
 
 @bp.route('/bracket-api/communitynews/getnewsposts', methods=['GET'])
 def get_allNewsPosts():
-  allNewsPosts = MemberNewsPost.query.all()
-  return jsonify({'data': [n.to_dict() for n in allNewsPosts] })
-  #return jsonify({'data': 'get news'})
+  #pagination stuff
+  page = request.args.get('page', 1, type=int)
+  #paged_news = MemberNewsPost.query.paginate(page, current_app.config['POSTS_PER_PAGE'], False).items
+  paged_news = MemberNewsPost.query.order_by(MemberNewsPost.publish_date.desc()).filter_by(is_announcement = False).paginate(page, current_app.config['POSTS_PER_PAGE'], False).items
+  test_news  = MemberNewsPost.query.order_by(MemberNewsPost.publish_date.desc()).filter_by(is_announcement = False).paginate(page, current_app.config['POSTS_PER_PAGE'], False)
+  test_thing = [t.to_dict() for t in test_news.items]
+  #pNews = [p.to_dict() for p in paged_news]
+  next_url = test_news.next_num if test_news.has_next else None
+  total_pages = test_news.total
+  #pnews = json.dumps({'paged': paged_news})
+  # for pageNews in paged_news.items:
+  #   p_news
+  #end pagination stuff
+  #allNewsPosts = MemberNewsPost.query.order_by(MemberNewsPost.publish_date.desc()).filter_by(is_announcement = False)
+  # payload = {'data': [n.to_dict() for n in allNewsPosts], 'pageData': pNews}
+  # return jsonify(payload)
+  #return jsonify({'data': [n.to_dict() for n in allNewsPosts]}, {'pageData': pNews})
+  payload = {'data': test_thing, 'nextUrl': next_url, 'totalPages': total_pages, 'page_sent': page, 'postsPerPage': current_app.config['POSTS_PER_PAGE']}
+  return jsonify(payload)
 
 @bp.route('/bracket-api/communitynews/getnewspost/<int:id>', methods=['GET'])
 def get_newspost(id):
